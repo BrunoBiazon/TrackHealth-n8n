@@ -34,7 +34,7 @@ O núcleo de inteligência do projeto. Gera relatórios cruzando todas as variá
 * **Orquestração:** n8n
 * **Bancos de Dados:** Google Sheets API
 * **Interfaces de Entrada:** Telegram Bot API, Strava Webhook API
-* **Processamento e IA:** Google Gemini API (ETL de normalização e Análise de Dados)
+* **Processamento e IA:** Groq
 
 ---
 
