@@ -2,7 +2,7 @@ name: Sincronizar Garmin com n8n
 
 on:
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: '0 */12 * * *'
   workflow_dispatch:
 
 jobs:
