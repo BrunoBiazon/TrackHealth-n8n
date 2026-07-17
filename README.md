@@ -1,4 +1,4 @@
-# 📊 TrackHealth-n8n
+# 📊 TrackHealth
 
 ## 🎯 Sobre o Projeto
 O **TrackHealth-n8n** é uma arquitetura de automação operando no **n8n**, projetada para o monitoramento rigoroso de performance esportiva e métricas de saúde. O sistema atua como um hub central de telemetria fisiológica, capturando dados desestruturados via Telegram e extraindo informações precisas de hardwares esportivos (Garmin). Utilizando IA, os dados são convertidos, estruturados e armazenados em uma planilha Google Sheets para consultas e análises.
@@ -38,6 +38,18 @@ O sistema agora é dividido em **três Workflows independentes**, garantindo mai
 #### Estruturado a partir das categorias, separando por páginas. Com isso, permite a melhor escalabilidade, manutenção e diminuição de latência / consumo de tokens dos agentes.
 <img width="1427" height="810" alt="image" src="https://github.com/user-attachments/assets/a9190075-1451-461c-9f80-958850629222" />
 
+
+## ☁️ Infraestrutura e Deploy
+
+O deploy deste projeto foi realizado com custo zero, utilizando a plataforma **Render** para a hospedagem do sistema e do banco de dados. Abaixo estão os recursos e configurações utilizados na infraestrutura:
+
+* **Plataforma de Hospedagem:** Render (Plano Free).
+* **Banco de Dados Relacional:** PostgreSQL 18, operando como um serviço de banco de dados interno no Render.
+* **Motor da Automação (Web Service):** Imagem Docker oficial do n8n (`docker.n8n.io/n8nio/n8n`), rodando em uma instância de Web Service com 512MB de RAM e CPU compartilhada.
+* **Variáveis de Ambiente (Environment Variables):** Utilizadas no Web Service para garantir a comunicação segura com o banco de dados interno e o funcionamento correto dos gatilhos:
+  * Variáveis de conexão com o banco: `DB_TYPE` (como `postgresdb`), `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER` e `DB_POSTGRESDB_PASSWORD`.
+  * Variáveis de sistema do n8n: `N8N_ENCRYPTION_KEY` e `WEBHOOK_URL` (URL pública do serviço, essencial para a comunicação com o Telegram Bot API).
+* **Gestão de Disponibilidade:** Integração com o **UptimeRobot**, responsável por realizar requisições HTTP a cada 14 minutos na URL do Web Service. Isso impede que a instância gratuita do Render entre em modo de suspensão, mantendo a automação 100% responsiva.
 ---
 
 ## 🛠️ Stack Tecnológica
