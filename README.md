@@ -1,31 +1,42 @@
-# TrackHealth-n8n
+# 📊 TrackHealth-n8n
 
-## Sobre
-Este projeto consiste em uma arquitetura de automação operando no **n8n**, projetada para o monitoramento rigoroso de indivíduos altamente treinados. O sistema atua como um diário de telemetria esportiva e fisiológica, capturando dados desestruturados via Telegram e extraindo métricas precisas de hardwares esportivos, estruturando tudo em um banco de dados relacional no Google Sheets com o auxílio de IA.
+## 🎯 Sobre o Projeto
+O **TrackHealth-n8n** é uma arquitetura de automação operando no **n8n**, projetada para o monitoramento rigoroso de performance esportiva e métricas de saúde. O sistema atua como um hub central de telemetria fisiológica, capturando dados desestruturados via Telegram e extraindo informações precisas de hardwares esportivos (Garmin). Utilizando IA, os dados são convertidos, estruturados e armazenados em uma planilha Google Sheets para consultas e análises.
 
+## 🏗️ Arquitetura do Sistema
+O sistema agora é dividido em **três Workflows independentes**, garantindo maior escalabilidade, isolamento de falhas, organização e integridade dos dados.
 
+### ⚙️ Workflow 1: Ingestão de Dados e Roteamento
+#### Atua como o "recepcionista" do sistema. É responsável por processar a mensagem do usuário no bot do telegram, estruturar os dados e decidir qual caminho a automação deve seguir.
+<img width="1229" height="632" alt="image" src="https://github.com/user-attachments/assets/746ffa63-4ad7-4b2c-9618-703a05ecdead" />
 
-## Arquitetura 
-O sistema é dividido em dois Workflows independentes, garantindo escalabilidade, isolamento de falhas e integridade dos dados.
+* **Gatilho (Trigger):** Recepção de mensagens de texto via Telegram Bot API.
+* **Processamento (Groq):** Serve como ETL, interpretando a entrada em linguagem natural e a converte em um *payload* JSON estrito, classificando a intenção do usuário entre as chaves: `TREINO`, `SONO`, `HIDRATACAO`, `MEDICAMENTO`, `PESO` ou `FEEDBACK`.
+* **Tratamento de Dados (Code):** Nós em JavaScript formatam e normalizam o JSON gerado.
+* **Roteamento (Switch):** Lê a categoria estruturada.
+  * **Se Inserção:** Preenche a aba correspondente no Google Sheets e retorna uma confirmação de cadastro via Telegram.
+  * **Se Feedback:** Interrompe o fluxo local e **aciona o Workflow 3**, repassando parâmetros essenciais via *Execute Workflow* (como o `ChatID` do usuário e o `PeriodoDias` requisitado).
 
-### ⚙️ Workflow 1: Inserção e Feedback de Dados
-Insere dados sobre **Treino, Sono, Medicação, Hidratção** e permite um **Feedback** dos dados gerados por IA a partir do **período de dias** requisitado.
-<img width="1494" height="599" alt="image" src="https://github.com/user-attachments/assets/4ebbedd2-6f95-4764-a205-94ac514d87f1" />
+### 🏃‍♂️ Workflow 2: Integração Automática (Garmin Connect)
+#### Um fluxo assíncrono que extrai os dados dos cardios passivamente a partir do salvamento de atividades no relógio Garmin, eliminando a dependência de APIs restritas oficiais.
+<img width="1229" height="613" alt="image" src="https://github.com/user-attachments/assets/a4ad7bc2-dc30-45ef-b970-9a242e76a909" />
 
-* **Gatilho:** Recebe mensagens de texto via Telegram Bot API.
-* **Processamento (Groq):** A IA atua como um middleware de ETL, interpretando a mensagem em linguagem natural e convertendo-a em um payload JSON estrito (classificando a intenção entre `TREINO`, `SONO`, `HIDRATACAO`, `MEDICAMENTO` , `PESO` ou `FEEDBACK`).
-* **Tratamento de Dados(Code)**: Formata para JSON para o formato correto utilizando JavaScript.
-* **Condicional (If):** Lê a categoria do JSON e direciona os dados, se for categoria `FEEDBACK` vai para o fluxo de Feedback dos dados, se não vai para a inserção na planilha.
-* **Inserção:** Preenche o Sheets com as informações dada pelo usuário, e posteriormente retorna um feeback no telegramBot sobre o cadastro bem sucedido.
+* **Extração (GitHub Actions):** Um script autônomo em Python, agendado via *cron job*, simula autenticação no Garmin Connect e coleta os 5 últimos registros contendo: `Data do Cardio`, `Nome do Exercício`, `Distância (m)`, `BPM Máximo`, `BPM Médio`, `Calorias` e `ID do Treino`.
+* **Tratamento de Dados (n8n):** O *payload* é recebido pelo n8n, onde um nó JavaScript faz tratamento do JSON e converte unidades brutas (ex: metros para quilômetros).
+* **Armazenamento Seguro (Upsert):** Salva as métricas na página "Cardio" do Google Sheets. A operação utiliza a lógica de *Update or Append* usando o `id_treino` como chave primária, garantindo a idempotência e evitando duplicação.
 
-* **Feedback:** Lê a planilha com os dados no Sheets, filtrando pelo período de DIAS requisitados pelo usuário. Com isso, a automação utiliza novamenta uma IA para análisar os dados, para posteriormente retornar ao usuário.
+### 🧠 Workflow 3: Motor de Análise e Feedback (IA)
+#### Fluxo dedicado exclusivamente à extração e análise analítica de dados consolidados. É acionado sob demanda de forma isolada para não sobrecarregar o fluxo de ingestão.
+<img width="1229" height="632" alt="image" src="https://github.com/user-attachments/assets/83511db1-3db3-4479-9116-64ab9d11c12f" />
 
-### 🏃‍♂️ Workflow 2: Automação Garmin Connect ("Ponte")
-**Insere informações do cardio a partir da salvamento do exercício no relogio garmin**, sem a necessidade da API do Garmin ou até mesmo Strava, utilizando um **Script agendado no GitHub Action**.
-* **Gatilho e Extração:** Um script em Python, agendado via cron job no GitHub Actions:
-* ** Script Python:** Simula o login no garmin, extrai os últimos 5 treinos com o `Data Cardio`,`Nome Cardio`, `Distância (metros)`,`BPM máximo`,`BPM médio`,`Calorias`, `ID treino`
-* **Tratamento de Dados:** Um nó JavaScript no n8n processa e converte os dados brutos (achatando o JSON ) para a inserção no Sheets, e converte distância em metros -> KM.
-* **Armazenamento Seguro (Upsert):** Salva as métricas limpas na aba "Cardio" do Google Sheets. Utiliza a lógica de *Update or Append* baseada na chave primária (`id_treino`) para garantir que os dados não sejam duplicados a cada execução do script.
+* **Gatilho Interno:** Acionado pelo Workflow 1 via nó *When Executed by Another Workflow*, recebendo de forma global o `ChatID` e o `PeriodoDias`.
+* **Busca de Dados:** Lê o banco de dados do Google Sheets, filtrando as métricas exatamente pelo intervalo de dias solicitado.
+* **Análise Fisiológica (Groq):** Injeta o histórico de dados em um novo *prompt* complexo. A IA atua como analista de performance, cruzando dados de carga, descanso e métricas cardiovasculares para gerar *insights*.
+* **Retorno (Telegram):** Resgata o `ChatID` recebido no gatilho inicial para enviar o relatório de performance diretamente para o celular do usuário em uma mensagem única.
+  
+## Google Sheets 📝
+#### Estruturado a partir das categorias, separando por páginas. Com isso, permite a melhor escalabilidade, manutenção e diminuição de latência / consumo de tokens dos agentes.
+<img width="1427" height="810" alt="image" src="https://github.com/user-attachments/assets/a9190075-1451-461c-9f80-958850629222" />
 
 ---
 
@@ -33,13 +44,15 @@ Insere dados sobre **Treino, Sono, Medicação, Hidratção** e permite um **Fee
 * **Orquestração de Fluxos:** n8n
 * **Infraestrutura e Deploy (n8n):** Render (Web Service Free)
 * **Banco de Dados Interno (n8n):** Render (PostgreSQL 18 Free)
-* **Automação de Scripts:** GitHub Actions (Secrets & Cron Jobs)
+* **Automação e Scripts:** GitHub Actions: Secrets para credênciais e Cron Job para automatizar o script,
 * **Interfaces e APIs:** Telegram Bot API, Google Sheets API
-* **Agente IA:** Groq (Modelo: `llama-3.3-70b-versatile`)
+* **Inteligência Artificial:** Groq (Modelo: `llama-3.3-70b-versatile`) - versão free
+* **Linguagens:** JavaScript (nós n8n) e Python (Script)
+  
 
 ---
 
 ## 🚀 Como Usar na Prática
-* **Registro de Rotina:** Envie mensagem no seu bot do Telegram, como *"Dormi 6 horas e meia hoje"* ou *"Treino de peito: supino top set 100kg pra 6 reps, 2 series válidas"*. O Workflow 1 entenderá o contexto, estruturará os dados e os salvará na aba correta.
-* **Feedback:** Envie mensagem no Bot, como "Quero um Feedback dos últimos 30 dias". O Worflow 1 entenderá o contexto, gerara uma análise com IA e retornará esse feedback no telegram.
-* **Métricas de Cardio e Performance:** Apenas inicie e finalize suas atividades normalmente no seu relógio Garmin. O fluxo em Python no GitHub Actions fará a extração periodicamente ( A cada duas horas ) e o Workflow 2 atualizará sua planilha em background sem nenhuma intervenção manual.
+* **Registro de Rotina:** Envie mensagens orgânicas no seu bot do Telegram, como *"Dormi 6 horas e meia hoje"* ou *"Treino de peito: supino top set 100kg pra 6 reps, 2 séries válidas"*. O Workflow 1 entenderá o contexto e fará a estruturação no banco automaticamente.
+* **Análise de Desempenho (Feedback):** Peça um balanço enviando *"Quero um feedback dos últimos 30 dias"*. O Workflow 1 delegará a tarefa para o Workflow 3, que fará a *query* na base de dados, processará com a IA e retornará um relatório avançado via Telegram.
+* **Telemetria de Cardio:** Apenas inicie e conclua suas atividades físicas no relógio Garmin. O *Cron Job* em background fará a extração periodicamente (a cada duas horas) e o Workflow 2 manterá sua planilha sincronizada sem nenhuma intervenção manual.
