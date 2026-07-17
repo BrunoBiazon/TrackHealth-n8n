@@ -19,9 +19,11 @@ jobs:
           python-version: '3.10'
 
       - name: Instalar dependências
+        working-directory: ./garmin-extrator
         run: pip install -r requirements.txt
 
       - name: Executar script de extração
+        working-directory: ./garmin-extrator
         env:
           GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
           GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
