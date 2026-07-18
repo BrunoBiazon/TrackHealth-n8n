@@ -49,6 +49,7 @@ O deploy deste projeto foi realizado com custo zero, utilizando a plataforma **R
 * **Variáveis de Ambiente (Environment Variables):** Utilizadas no Web Service para garantir a comunicação segura com o banco de dados interno e o funcionamento correto dos gatilhos:
   * Variáveis de conexão com o banco: `DB_TYPE` (como `postgresdb`), `DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_DATABASE`, `DB_POSTGRESDB_USER` e `DB_POSTGRESDB_PASSWORD`.
   * Variáveis de sistema do n8n: `N8N_ENCRYPTION_KEY` e `WEBHOOK_URL` (URL pública do serviço, essencial para a comunicação com o Telegram Bot API).
+  * Variáveis de Fuso Horário (Timezone): TZ e GENERIC_TIMEZONE configuradas como America/Sao_Paulo para garantir o registro preciso de datas e horas (UTC-3) em todas as inserções no Sheets.
 * **Gestão de Disponibilidade:** Integração com o **UptimeRobot**, responsável por realizar requisições HTTP a cada 14 minutos na URL do Web Service. Isso impede que a instância gratuita do Render entre em modo de suspensão, mantendo a automação 100% responsiva.
 ---
 
