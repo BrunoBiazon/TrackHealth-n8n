@@ -1,0 +1,1071 @@
+{
+  "name": "trackhealth",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -336,
+        80
+      ],
+      "id": "b58cde7a-5ab5-4d2c-9b3b-04fbdad5fea4",
+      "name": "Telegram Trigger",
+      "webhookId": "e59205b0-83b7-4e15-91d9-df384177024d",
+      "credentials": {
+        "telegramApi": {
+          "id": "0fIXrfyQrHGjFCJV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Tratamento Entrada \n",
+        "height": 208,
+        "width": 400,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -144,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "cd5d11ef-758f-43a9-981e-febe5a4d24c3",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Inserção Treino Musculção",
+        "height": 208,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        -496
+      ],
+      "typeVersion": 1,
+      "id": "8763ae2c-2e5d-41a8-8d76-d53c1f6ca14c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Entrada Dados\n",
+        "height": 208,
+        "width": 192,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -384,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "adc479f8-4593-400f-a1f9-943c00386118",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"temperature\": 0,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Você é um processador de dados JSON. REGRAS: 1. Analise o input do usuário e preencha APENAS a estrutura JSON abaixo. 2. NÃO adicione chaves extras. 3. NÃO explique o processo. 4. Retorne APENAS o objeto JSON puro. 5. Se um campo não puder ser preenchido, use null. ESTRUTURA: {\\\"categoria_switch\\\": \\\"TREINO|SONO|HIDRATACAO|MEDICAMENTO|PESO|FEEDBACK\\\", \\\"periodo_dias_feedback\\\": null, \\\"tabela_treino\\\": {\\\"exercicio\\\": null, \\\"series_validas\\\": null, \\\"top_set_carga\\\": null, \\\"top_set_reps\\\": null}, \\\"tabela_sono\\\": {\\\"horas_sono\\\": null}, \\\"tabela_hidratacao\\\": {\\\"quantidade_ml\\\": null}, \\\"tabela_medicamento\\\": {\\\"medicamento\\\": null, \\\"mg\\\": null, \\\"via\\\": null, \\\"local\\\": null}, \\\"tabela_peso\\\": {\\\"peso\\\": null}}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $('Telegram Trigger').first().json.message.text }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -96,
+        80
+      ],
+      "id": "86918911-377f-40a9-8b98-7e42039162aa",
+      "name": "Tratamento com IA",
+      "credentials": {
+        "groqApi": {
+          "id": "eOS03ADX0tpL3fSP",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = JSON.parse(items[0].json.choices[0].message.content);\nreturn { json: response };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        80
+      ],
+      "id": "a3d11b3b-7b87-4806-8ca4-5df110f6c32a",
+      "name": "Formatação para JSON"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Treino",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Exercício ": "={{ $json.tabela_treino.exercicio }}",
+            "Séries válidas ": "={{ $json.tabela_treino.series_validas }}",
+            "Top Set carga KG": "={{ $json.tabela_treino.top_set_carga }}",
+            "Top Set reps": "={{ $json.tabela_treino.top_set_reps }}",
+            "Data exercício ": "={{ $json.tabela_treino.exercicio ? new Date().toLocaleDateString('pt-BR') : \"\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data exercício ",
+              "displayName": "Data exercício ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Exercício ",
+              "displayName": "Exercício ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Séries válidas ",
+              "displayName": "Séries válidas ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Top Set carga KG",
+              "displayName": "Top Set carga KG",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Top Set reps",
+              "displayName": "Top Set reps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -448
+      ],
+      "id": "5647442d-670c-4e4a-a4fb-23c1df3d70c4",
+      "name": "Inserção no Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Informações do treino cadastradas com sucesso!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        -448
+      ],
+      "id": "59aee7fb-2d52-475a-8f55-a03bb452defe",
+      "name": "Retorno inserção User",
+      "webhookId": "cc80508f-6275-4510-a898-537767af3de7",
+      "credentials": {
+        "telegramApi": {
+          "id": "0fIXrfyQrHGjFCJV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ddc4bd71-0624-4a42-b3ff-88fff934e9c5",
+                    "leftValue": "={{ $json.categoria_switch }}",
+                    "rightValue": "TREINO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "03a210c5-1e22-4901-8108-cb462aed74a8",
+                    "leftValue": "={{ $json.categoria_switch }}",
+                    "rightValue": "MEDICAMENTO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e5b72372-3ed3-4d39-8a00-5cfb19100963",
+                    "leftValue": "={{ $json.categoria_switch }}",
+                    "rightValue": "PESO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e8aebc8c-5bdd-4d10-95a3-964ad1e118c6",
+                    "leftValue": "={{ $json.categoria_switch }}",
+                    "rightValue": "SONO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b422bb02-8c73-4ade-a052-41c8747c8629",
+                    "leftValue": "={{ $json.categoria_switch }}",
+                    "rightValue": "HIDRATACAO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8de9b454-a861-4725-83c7-38f0fe8d8c69",
+                    "leftValue": "={{ $json.categoria_switch }}",
+                    "rightValue": "=FEEDBACK",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        16
+      ],
+      "id": "11e2a104-88db-40e2-a9b0-c1d6aae6a48b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "Inserção Medicação",
+        "height": 208,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "8f0cf03b-95f8-42f7-a660-61af12521052",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 532797892,
+          "mode": "list",
+          "cachedResultName": "Medicamento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=532797892"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Data Medicação ": "={{ $json.tabela_medicamento.medicamento ? new Date().toLocaleDateString('pt-BR') : \"\" }}",
+            "Medicamento ": "={{ $json.tabela_medicamento.medicamento }}",
+            "Mg": "={{ $json.tabela_medicamento.mg }}",
+            "Local": "={{ $json.tabela_medicamento.local }}",
+            "Via ": "={{ $json.tabela_medicamento.via }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data Medicação ",
+              "displayName": "Data Medicação ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Medicamento ",
+              "displayName": "Medicamento ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Mg",
+              "displayName": "Mg",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Via ",
+              "displayName": "Via ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Local",
+              "displayName": "Local",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -192
+      ],
+      "id": "6ff48ee8-45f9-4878-b149-7c6d48308a27",
+      "name": "Inserção no Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Informações da medicação cadastradas com sucesso!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        -192
+      ],
+      "id": "bc02bc58-2118-4939-8508-5ed2941f9674",
+      "name": "Retorno inserção User1",
+      "webhookId": "cc80508f-6275-4510-a898-537767af3de7",
+      "credentials": {
+        "telegramApi": {
+          "id": "0fIXrfyQrHGjFCJV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Inserção Peso",
+        "height": 208,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        16
+      ],
+      "typeVersion": 1,
+      "id": "abdbc274-5660-4829-af43-b492424d7f3c",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1747274448,
+          "mode": "list",
+          "cachedResultName": "Peso",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=1747274448"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Peso KG": "={{ $json.tabela_peso.peso }}",
+            "Data peso": "={{ $json.tabela_peso.peso ? new Date().toLocaleDateString('pt-BR') : \"\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data peso",
+              "displayName": "Data peso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Peso KG",
+              "displayName": "Peso KG",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        64
+      ],
+      "id": "e6a873c4-232d-4ad7-b126-10986b93aaa7",
+      "name": "Inserção no Sheets2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Informações do peso cadastrada com sucesso!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        64
+      ],
+      "id": "ed9466d1-78c0-4ce4-a76f-d4a347e40c99",
+      "name": "Retorno inserção User2",
+      "webhookId": "cc80508f-6275-4510-a898-537767af3de7",
+      "credentials": {
+        "telegramApi": {
+          "id": "0fIXrfyQrHGjFCJV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Inserção Sono",
+        "height": 208,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "3a6b3871-94a9-4014-bef1-26c4dcd61621",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 338043269,
+          "mode": "list",
+          "cachedResultName": "Sono",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=338043269"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Data sono ": "={{ $json.tabela_sono.horas_sono ? new Date().toLocaleDateString('pt-BR') : \"\" }}",
+            "Horas sono": "={{ $json.tabela_sono.horas_sono }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data sono ",
+              "displayName": "Data sono ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Horas sono",
+              "displayName": "Horas sono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        320
+      ],
+      "id": "25472ef6-e914-4760-9df6-97598764a7b2",
+      "name": "Inserção no Sheets3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Horas de sono cadastrada com sucesso!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        320
+      ],
+      "id": "61dfa7e7-999d-4691-ad73-a3a441f9a46a",
+      "name": "Retorno inserção User3",
+      "webhookId": "cc80508f-6275-4510-a898-537767af3de7",
+      "credentials": {
+        "telegramApi": {
+          "id": "0fIXrfyQrHGjFCJV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Inserção Hidratação",
+        "height": 208,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        848,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "406d4a9c-34c3-4d1a-9852-354c8edadefb",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 265999065,
+          "mode": "list",
+          "cachedResultName": "Hidratação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=265999065"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Quantidade ml": "={{ $json.tabela_hidratacao.quantidade_ml }}",
+            "Data hidratação ": "={{ $json.tabela_hidratacao.quantidade_ml ? new Date().toLocaleDateString('pt-BR') : \"\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Data hidratação ",
+              "displayName": "Data hidratação ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantidade ml",
+              "displayName": "Quantidade ml",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        576
+      ],
+      "id": "f170c3c4-ee94-497b-862c-e18b638f1d70",
+      "name": "Inserção no Sheets4",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Quantidade de ml cadastrada com sucesso!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        576
+      ],
+      "id": "44c4ddb4-8649-44e2-886b-cb62c34ff7dd",
+      "name": "Retorno inserção User4",
+      "webhookId": "cc80508f-6275-4510-a898-537767af3de7",
+      "credentials": {
+        "telegramApi": {
+          "id": "0fIXrfyQrHGjFCJV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "atFleLO73mP7g43w",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/atFleLO73mP7g43w",
+          "cachedResultName": "trackhealth"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ChatID": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "PeriodoDias": "={{ $('Formatação para JSON').item.json.periodo_dias_feedback }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ChatID",
+              "displayName": "ChatID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PeriodoDias",
+              "displayName": "PeriodoDias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        480
+      ],
+      "id": "5efb52e9-1d56-43b6-a37a-bf2d23297218",
+      "name": "Chama Workflow 3"
+    },
+    {
+      "parameters": {
+        "content": "Feedback Dados",
+        "height": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        464,
+        448
+      ],
+      "typeVersion": 1,
+      "id": "bdd0960c-2d99-4b10-ad54-37eb9b97c972",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Tratamento com IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tratamento com IA": {
+      "main": [
+        [
+          {
+            "node": "Formatação para JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatação para JSON": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserção no Sheets": {
+      "main": [
+        [
+          {
+            "node": "Retorno inserção User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Inserção no Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inserção no Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inserção no Sheets2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inserção no Sheets3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inserção no Sheets4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chama Workflow 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserção no Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Retorno inserção User1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserção no Sheets2": {
+      "main": [
+        [
+          {
+            "node": "Retorno inserção User2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserção no Sheets3": {
+      "main": [
+        [
+          {
+            "node": "Retorno inserção User3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserção no Sheets4": {
+      "main": [
+        [
+          {
+            "node": "Retorno inserção User4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retorno inserção User2": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4126c439-5dad-4775-ad86-ed97ba87d141",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ccf342d4b12f6b61a3579429ae4f60264097ac2c8d85397623de6b8b877ed4"
+  },
+  "nodeGroups": [],
+  "id": "a9YrK4Ai8sCnzkrV",
+  "tags": [
+    {
+      "updatedAt": "2026-07-15T13:34:08.582Z",
+      "createdAt": "2026-07-15T13:34:08.582Z",
+      "id": "s03aqvRZCvduqR72",
+      "name": "workflow1"
+    }
+  ]
+}

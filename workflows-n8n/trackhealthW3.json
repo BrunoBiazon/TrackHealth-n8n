@@ -1,0 +1,697 @@
+{
+  "name": "trackhealth",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "ChatID",
+              "type": "any"
+            },
+            {
+              "name": "PeriodoDias",
+              "type": "any"
+            }
+          ]
+        },
+        "returnOutput": "allRuns"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        144,
+        352
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.ChatID }}",
+        "text": "={{ $json.texto_para_telegram }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2208,
+        336
+      ],
+      "id": "195e35d1-ba4f-4741-9045-3b96c50e2d2c",
+      "name": "Retorno User Análise dados",
+      "webhookId": "03e6b5e2-0ffb-4890-9325-569aada9ed0a",
+      "credentials": {
+        "telegramApi": {
+          "id": "0fIXrfyQrHGjFCJV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    \"model\": \"llama-3.3-70b-versatile\",\n    \"temperature\": 0.3,\n    \"messages\": [\n      {\n        \"role\": \"system\",\n        \"content\": \"Você é um médico do esporte, especialista em saúde de alta performance e fisiculturista profissional. Sua missão é analisar os dados reais de uma pessoa visando a perfomance e saúde. O JSON possui registros do dia a dia sobre treino, cardio, medicação, sono e hidratação. DIRETRIZES DE ANÁLISE: 1. Baseie-se ESTRITAMENTE nos dados reais fornecidos; nunca invente ou suponha dados hipotéticos. 2. Ignore completamente chaves e campos que estejam vazios. 3. Cruze as informações (ex: como o sono ou hidratação afetaram o cardio/treino). REGRAS DE FORMATAÇÃO: 1. Separe a sua resposta em tópicos claros para cada categoria que possuir dados (Treino, Cardio, Sono, Hidratação, Medicação). 2. Para CADA tópico, escreva um parágrafo de NO MÁXIMO 5 linhas contendo o seu parecer clínico, o impacto fisiológico e recomendações práticas. 3. Não inclua categorias que não tenham dados preenchidos.\"\n      },\n      {\n        \"role\": \"user\",\n        \"content\": \"Aqui estão os dados do atleta referentes a este período para a sua análise: \" + JSON.stringify($json.registros)\n      }\n    ]\n  })\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1776,
+        336
+      ],
+      "id": "8d1aa799-6aac-4927-9128-3e14f12116e4",
+      "name": "Análise Dados Com a IA",
+      "credentials": {
+        "groqApi": {
+          "id": "eOS03ADX0tpL3fSP",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const textoOriginal = $input.first().json.choices[0].message.content;\n\nconst textoLimpo = textoOriginal\n  .replace(/[#_*`~]/g, '') \n  .replace(/\\\\n/g, '\\n');  \n\nreturn {\n  texto_para_telegram: textoLimpo\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        336
+      ],
+      "id": "cc963e4c-d040-428e-a969-69d801738336",
+      "name": "Formata REGEX"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Forçamos o valor para 10 se o parâmetro não estiver chegando corretamente\nconst dias = parseInt($input.all()[0].json.periodo_dias) || 10; \nconst dataLimite = new Date();\ndataLimite.setDate(dataLimite.getDate() - dias);\n\nconst dia = String(dataLimite.getDate()).padStart(2, '0');\nconst mes = String(dataLimite.getMonth() + 1).padStart(2, '0');\nconst ano = dataLimite.getFullYear();\n\nreturn {\n  data_corte: `${dia}/${mes}/${ano}`\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        352
+      ],
+      "id": "8a0f896d-ec20-4619-92e8-28df5536917e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Treino",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        -16
+      ],
+      "id": "1fa954d1-d4f2-42fe-a003-2b5b96158c52",
+      "name": "Lista dados Treino",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1609489299,
+          "mode": "list",
+          "cachedResultName": "Cardio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=1609489299"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        128
+      ],
+      "id": "1038e0e0-914e-4064-8db9-c4c79adc9059",
+      "name": "Lista dados Cardio",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 338043269,
+          "mode": "list",
+          "cachedResultName": "Sono",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=338043269"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        272
+      ],
+      "id": "a943eb79-ddd9-48b4-bf53-b37bdbf3e726",
+      "name": "Lista dados Sono",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1747274448,
+          "mode": "list",
+          "cachedResultName": "Peso",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=1747274448"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        432
+      ],
+      "id": "cc47cdb0-4d40-4c98-ac0d-bfc65afd0206",
+      "name": "Lista dados Peso",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 532797892,
+          "mode": "list",
+          "cachedResultName": "Medicamento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=532797892"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        576
+      ],
+      "id": "e7b6b890-6d76-4741-9a77-7fcd7e15c3f1",
+      "name": "Lista dados Medicação",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 265999065,
+          "mode": "list",
+          "cachedResultName": "Hidratação",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=265999065"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          },
+          "outputFormatting": {
+            "values": {
+              "general": "UNFORMATTED_VALUE",
+              "date": "FORMATTED_STRING"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        720
+      ],
+      "id": "08345b75-a1b1-41be-8f51-6328d10c72e6",
+      "name": "Lista dados Hidratação",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dataCorteStr = $('Code in JavaScript').item.json.data_corte; \nconst [cd, cm, cy] = dataCorteStr.split('/');\nconst corteFormatado = parseInt(`${cy}${cm}${cd}`);\n\nconst todosDados = $items();\nconst resultado = todosDados.filter(item => {\n  const chaves = [\"Data Cardio\", \"Data exercício \", \"Data sono \", \"Data peso\", \"Data hidratação \", \"Data Medicação \"];\n  \n  const chaveEncontrada = chaves.find(k => item.json.hasOwnProperty(k));\n  \n\n  if (!chaveEncontrada) return true; \n  \n  const dataStr = item.json[chaveEncontrada];\n  if (!dataStr) return true;\n  \n  const [d, m, y] = dataStr.split('/');\n  const dataFormatada = parseInt(`${y}${m}${d}`);\n  \n  return dataFormatada >= corteFormatado;\n});\n\nreturn {\n  json: {\n    periodo: \"Analise de performance\",\n    total_registros: resultado.length,\n    registros: resultado.map(i => i.json)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        336
+      ],
+      "id": "e2787b12-cb44-4928-a8aa-3c073a843e55",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        272
+      ],
+      "id": "0b738daf-cf76-4cc0-8c84-2f95511f5248",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "Define Data de filtro\n",
+        "height": 176,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "afffe682-6e2d-456b-9e5b-8556054c4197",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Leitura Páginas",
+        "height": 976,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "0c52a07d-7dff-4715-bb98-9b370d508132",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Merge Dados\n",
+        "height": 336,
+        "width": 160
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1168,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "b78753b3-27be-4650-b5ee-4ea44be65904",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Formata para IA",
+        "height": 192,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1440,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "325cf376-2d5f-4b4f-ab4e-9ef15e64d610",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Agente cria a análise",
+        "height": 208,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1728,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "802e6e24-2fe7-4a3f-942f-0a0181015a81",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Envia o Feedback\n",
+        "height": 240,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2160,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "482aef9a-104b-4c4f-9bdc-8d201fed429d",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Análise Dados Com a IA": {
+      "main": [
+        [
+          {
+            "node": "Formata REGEX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formata REGEX": {
+      "main": [
+        [
+          {
+            "node": "Retorno User Análise dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Lista dados Treino",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lista dados Sono",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lista dados Peso",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lista dados Medicação",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lista dados Cardio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lista dados Hidratação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lista dados Treino": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lista dados Cardio": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Lista dados Sono": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Lista dados Peso": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Lista dados Medicação": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Lista dados Hidratação": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Análise Dados Com a IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Retorno User Análise dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "836575f5-512b-4082-92e0-82a8effcf499",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ccf342d4b12f6b61a3579429ae4f60264097ac2c8d85397623de6b8b877ed4"
+  },
+  "nodeGroups": [],
+  "id": "atFleLO73mP7g43w",
+  "tags": [
+    {
+      "updatedAt": "2026-07-17T17:15:02.299Z",
+      "createdAt": "2026-07-17T17:15:02.299Z",
+      "id": "WA6Y2oaaGB9TyO0O",
+      "name": "workflow3"
+    }
+  ]
+}

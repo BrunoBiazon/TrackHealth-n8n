@@ -1,0 +1,255 @@
+{
+  "name": "trackhealth",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 1. Pega os dados do body do Webhook\nlet body = $input.all()[0].json.body;\n\n// 2. Transforma em JSON se tiver vindo como texto\nif (typeof body === 'string') {\n  try { \n    body = JSON.parse(body); \n  } catch (e) { \n    return []; \n  }\n}\n\n// 3. Encontra a lista de treinos enviada pelo Python\nlet treinos = [];\nif (body?.treinos && Array.isArray(body.treinos)) {\n  treinos = body.treinos;\n} else {\n  return [];\n}\n\n// Filtra apenas treinos que de fato possuem um nome\ntreinos = treinos.filter(t => t.nome_treino);\n\n// 4. Mapeia para o formato EXATO e achatado esperado pelo Sheets\nreturn treinos.map(treino => {\n  \n  // Tratamento da Data (Converte \"2026-07-16 20:52:49\" para \"16/07/2026\")\n  let dataFormatada = null;\n  if (treino.data_inicio) {\n    const dataOriginal = treino.data_inicio.split(' ')[0];\n    const partes = dataOriginal.split('-');\n    if (partes.length === 3) {\n      dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;\n    } else {\n      dataFormatada = dataOriginal;\n    }\n  }\n\n  let distanciaKm = 0;\n  if (treino.distancia_metros) {\n    distanciaKm = Number((treino.distancia_metros / 1000).toFixed(2));\n  }\n\n  return {\n    json: {\n      id_treino: treino.id_treino,\n      categoria_switch: \"CARDIO\",\n      datacardio: dataFormatada,\n      nome_cardio: treino.nome_treino,\n      distancia: distanciaKm, \n      bpm_medio: treino.bpm_medio ? Number(treino.bpm_medio) : 0,\n      bpm_maximo: treino.bpm_maximo ? Number(treino.bpm_maximo) : 0,\n      calorias: treino.calorias ? Number(treino.calorias) : 0,\n      duracao_minutos: treino.tempo_minutos ? Number(treino.tempo_minutos) : 0\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7ee220bf-6bd8-4821-843e-c56641fc276b",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg",
+          "mode": "list",
+          "cachedResultName": "TrackHealth",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1609489299,
+          "mode": "list",
+          "cachedResultName": "Cardio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-6MP1ZZcan0g-jjmd0uQzHCOZcbgxyo0Hj-rShOnHdg/edit#gid=1609489299"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID Treino": "={{ $json.id_treino }}",
+            "Máximo BPM": "={{ $json.bpm_maximo }}",
+            "Média BPM": "={{ $json.bpm_medio }}",
+            "Distância (KM)": "={{ $json.distancia }}",
+            "Nome cardio": "={{ $json.nome_cardio }}",
+            "Minutos ": "={{ $json.duracao_minutos }}",
+            "Calorias": "={{ $json.calorias }}",
+            "Data Cardio": "={{ $json.datacardio }}"
+          },
+          "matchingColumns": [
+            "ID Treino"
+          ],
+          "schema": [
+            {
+              "id": "Data Cardio",
+              "displayName": "Data Cardio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nome cardio",
+              "displayName": "Nome cardio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Distância (KM)",
+              "displayName": "Distância (KM)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Minutos ",
+              "displayName": "Minutos ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Média BPM",
+              "displayName": "Média BPM",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Máximo BPM",
+              "displayName": "Máximo BPM",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Calorias",
+              "displayName": "Calorias",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID Treino",
+              "displayName": "ID Treino",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        0
+      ],
+      "id": "55fa48a2-6bee-4739-bdc1-486ebd1db0ef",
+      "name": "Inserção na planilha",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iBJJ3wjnoI7EWMR0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Entrada de dados Cardio\n",
+        "height": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "03e739e7-163c-4ed6-b712-5ad58089276b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Tratamento e conversão",
+        "height": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        160,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "03fd3ff4-da13-4c32-920c-1084caddafd0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Inserção na planilha\n",
+        "height": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        496,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "3d495d3d-3ba5-47bd-8586-6306985260e0",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "garmin",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        0
+      ],
+      "id": "a5778dee-1f4e-4a22-85b9-7fec70d41fdc",
+      "name": "Webhook Script Garmin",
+      "webhookId": "6fb36772-3a97-45b1-b618-21932133c4b1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Inserção na planilha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserção na planilha": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook Script Garmin": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1f1649f0-d775-41b9-ad77-ee7d730d90ac",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b8ccf342d4b12f6b61a3579429ae4f60264097ac2c8d85397623de6b8b877ed4"
+  },
+  "nodeGroups": [],
+  "id": "B1uwfGIrQtyDLRov",
+  "tags": [
+    {
+      "updatedAt": "2026-07-15T13:34:46.441Z",
+      "createdAt": "2026-07-15T13:34:46.441Z",
+      "id": "1IqyUIW48EiWXeBZ",
+      "name": "workflow2"
+    }
+  ]
+}
