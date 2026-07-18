@@ -1,10 +1,10 @@
 # 📊 TrackHealth
 
 ## 🎯 Sobre o Projeto
-O **TrackHealth-n8n** é uma arquitetura de automação operando no **n8n**, projetada para o monitoramento rigoroso de performance esportiva e métricas de saúde. O sistema atua como um hub central de telemetria fisiológica, capturando dados desestruturados via Telegram e extraindo informações precisas de hardwares esportivos (Garmin). Utilizando IA, os dados são convertidos, estruturados e armazenados em uma planilha Google Sheets para consultas e análises.
+O **TrackHealth-n8n** é uma arquitetura de automação operando no **n8n**, projetada para o monitoramento rigoroso de performance esportiva e métricas de saúde. O sistema atua capturando dados desestruturados via Telegram e extraindo informações precisas de hardwares esportivos (Garmin). Utilizando IA, os dados são convertidos, estruturados e armazenados em uma planilha Google Sheets para consultas e análises.
 
 ## 🏗️ Arquitetura do Sistema
-O sistema agora é dividido em **três Workflows independentes**, garantindo maior escalabilidade, isolamento de falhas, organização e integridade dos dados.
+O sistema agora é dividido em **três Workflows independentes**, garantindo maior escalabilidade, isolamento de falhas, organização,menos gastos de tokens e integridade dos dados.
 
 ### ⚙️ Workflow 1: Ingestão de Dados e Roteamento
 #### Atua como o "recepcionista" do sistema. É responsável por processar a mensagem do usuário no bot do telegram, estruturar os dados e decidir qual caminho a automação deve seguir.
